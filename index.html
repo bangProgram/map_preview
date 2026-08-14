@@ -103,10 +103,10 @@ const PALETTES = {
     major:'#FFFDF7', majorLine:'#EBD9BC', minor:'#FFF6E8', minorLine:'#EEDFC6',
     label:'#8A7550', labelHalo:'#FFFDF7' },
   night: { name:'밤빛 야간',
-    bg:'#12141F', water:'#14304C', park:'#1B3A2C', land:'#171A28',
-    bld:'#1E2133', bldLine:'#2C3049',
-    major:'#343A63', majorLine:'#3F4677', minor:'#262A45', minorLine:'#2F3452',
-    label:'#B9BEE0', labelHalo:'#0E101A' },
+    bg:'#0D0F18', water:'#123A5C', park:'#1B4030', land:'#12151F',
+    bld:'#1A1E2E', bldLine:'#2A3048',
+    major:'#4A5490', majorLine:'#5A65A8', minor:'#343B63', minorLine:'#404874',
+    label:'#CFD4F0', labelHalo:'#080A12' },
   plain: { name:'일반 지도',
     bg:'#EFEFEA', water:'#B4D2E7', park:'#D3E5C6', land:'#E9E9E3',
     bld:'#E0E0DA', bldLine:'#CDCDC6',
@@ -237,12 +237,17 @@ function drawPoints() {
 
   map.addSource('pts', { type:'geojson', data: randomPoints(ptCount) });
   map.addLayer({ id:'pts-glow', type:'circle', source:'pts',
-    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],14,6,18,22],
-            'circle-color':'#F5C518', 'circle-opacity':0.14, 'circle-blur':0.7 } });
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],10,4,14,10,18,26],
+            'circle-color':'#F5C518', 'circle-opacity':0.16, 'circle-blur':0.7 } });
   map.addLayer({ id:'pts', type:'circle', source:'pts',
-    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],14,1.6,18,5],
-            'circle-color':'#FFD966',
-            'circle-stroke-width':0.5, 'circle-stroke-color':'#8A6B00' } });
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],10,1.5,14,3,18,6],
+            'circle-color':'#FFE08A',
+            'circle-stroke-width':0.6, 'circle-stroke-color':'#7A5C00' } });
+}
+
+function refreshPoints() {
+  if (!ptCount || !map.getSource('pts')) return;
+  map.getSource('pts').setData(randomPoints(ptCount));
 }
 
 function setPoints(n, btn, others) {
@@ -279,6 +284,7 @@ function start() {
   });
 
   map.on('styledata', drawPoints);
+  map.on('moveend', refreshPoints);
   map.on('move', () => {
     const c = map.getCenter();
     $('pos').textContent = c.lat.toFixed(5) + ', ' + c.lng.toFixed(5);
