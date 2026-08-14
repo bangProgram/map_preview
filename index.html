@@ -3,92 +3,80 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>지도 스타일 미리보기</title>
+<title>레이어 시안</title>
 <link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
 <style>
-  :root{
-    --ink:#F2EFE6; --ink-dim:#9A968A; --line:#2B2E3C;
-    --panel:#15171F; --panel-2:#1D2029; --accent:#F5C518;
-  }
+  :root{--ink:#F2EFE6;--dim:#9A968A;--line:#2B2E3C;--panel:#15171F;--panel2:#1D2029;--acc:#F5C518}
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:#0E0F15;color:var(--ink);
+  html,body{margin:0;height:100%;background:#0B0C12;color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
     -webkit-text-size-adjust:100%}
   #map{position:absolute;inset:0}
-
-  .gate{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
-    padding:24px;background:#0E0F15}
+  .gate{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;background:#0B0C12}
   .gate-in{width:100%;max-width:380px}
-  .gate h1{font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
-  .gate p{font-size:13px;line-height:1.6;color:var(--ink-dim);margin:0 0 20px}
-  label{display:block;font-size:12px;color:var(--ink-dim);margin:0 0 6px}
+  .gate h1{font-size:19px;font-weight:600;margin:0 0 6px}
+  .gate p{font-size:13px;line-height:1.6;color:var(--dim);margin:0 0 20px}
+  label{display:block;font-size:12px;color:var(--dim);margin:0 0 6px}
   input[type=text]{width:100%;height:46px;padding:0 14px;font-size:16px;color:var(--ink);
-    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;outline:none}
-  input[type=text]:focus{border-color:var(--accent)}
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;outline:none}
+  input[type=text]:focus{border-color:var(--acc)}
   .btn{width:100%;height:46px;margin-top:12px;font-size:15px;font-weight:600;color:#191919;
-    background:var(--accent);border:0;border-radius:10px;cursor:pointer}
-  .btn:disabled{opacity:.4;cursor:default}
-  .note{font-size:11px;line-height:1.6;color:#6E6B62;margin:14px 0 0}
-
+    background:var(--acc);border:0;border-radius:10px}
+  .btn:disabled{opacity:.4}
   .dock{position:absolute;left:0;right:0;bottom:0;z-index:10;
-    padding:12px 12px calc(12px + env(safe-area-inset-bottom));
-    background:linear-gradient(to top,rgba(14,15,21,.96),rgba(14,15,21,.72) 70%,transparent)}
-  .row{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;
-    scrollbar-width:none;padding-bottom:2px}
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,rgba(11,12,18,.97),rgba(11,12,18,.7) 72%,transparent)}
+  .row{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
   .row::-webkit-scrollbar{display:none}
-  .row+.row{margin-top:8px}
-
-  .sw{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:42px;padding:0 13px 0 10px;
-    background:var(--panel);border:1px solid var(--line);border-radius:21px;
-    font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
-  .sw[aria-pressed=true]{border-color:var(--accent);background:var(--panel-2)}
-  .chips{display:flex;gap:3px}
-  .chip{width:11px;height:22px;border-radius:3px}
-
-  .tg{flex:0 0 auto;height:36px;padding:0 14px;background:var(--panel);border:1px solid var(--line);
-    border-radius:18px;font-size:12.5px;color:var(--ink-dim);cursor:pointer;white-space:nowrap}
-  .tg[aria-pressed=true]{color:#191919;background:var(--accent);border-color:var(--accent);font-weight:600}
-
+  .row+.row{margin-top:7px}
+  .tg{flex:0 0 auto;display:flex;align-items:center;gap:7px;height:38px;padding:0 14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:19px;
+    font-size:13px;color:var(--dim);white-space:nowrap}
+  .tg[aria-pressed=true]{color:var(--ink);border-color:#4A4F6B;background:var(--panel2)}
+  .key{width:12px;height:12px;flex:0 0 auto}
+  .rd{border-radius:50%}
+  .sq{border-radius:2px}
   .hud{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;
-    gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
-    font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-dim);
-    background:linear-gradient(to bottom,rgba(14,15,21,.85),transparent);pointer-events:none}
+    padding:calc(9px + env(safe-area-inset-top)) 12px 9px;font-size:11.5px;
+    font-variant-numeric:tabular-nums;color:var(--dim);
+    background:linear-gradient(to bottom,rgba(11,12,18,.85),transparent);pointer-events:none}
   .hud b{color:var(--ink);font-weight:500}
   .maplibregl-ctrl-group{background:var(--panel)!important;border:1px solid var(--line)!important}
-  .maplibregl-ctrl-group button+button{border-top-color:var(--line)!important}
   .maplibregl-ctrl-group button span{filter:invert(1) brightness(1.6)}
-  .toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;
-    max-width:300px;padding:14px 18px;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;font-size:13px;line-height:1.6;text-align:center;display:none}
+  .toast{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);z-index:30;max-width:300px;
+    padding:13px 17px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    font-size:13px;line-height:1.6;text-align:center;display:none}
 </style>
 </head>
 <body>
 
 <div class="gate" id="gate">
   <div class="gate-in">
-    <h1>지도 스타일 미리보기</h1>
-    <p>MapTiler 키를 넣으면 실제 지도에 파스텔·야간 스타일이 입혀집니다. 키는 이 화면에서만 쓰이고 어디에도 저장되지 않습니다.</p>
+    <h1>레이어 시안</h1>
+    <p>가로등, CCTV, 경찰서, 위험지역 네 가지를 한 화면에 얹었을 때 서로 구분되는지 보는 화면입니다. 데이터는 지도 중심 주변에 임의로 생성한 가짜 값입니다.</p>
     <label for="key">MapTiler API 키</label>
     <input type="text" id="key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="키 붙여넣기">
     <button class="btn" id="go" disabled>지도 열기</button>
-    <p class="note">공개 URL에 올려서 쓸 계획이면 MapTiler 콘솔에서 이 키에 도메인 제한을 걸어두세요.</p>
   </div>
 </div>
 
 <div id="map"></div>
 
 <div class="hud" id="hud" style="display:none">
-  <span id="pos">–</span>
-  <span>줌 <b id="zoom">–</b> · 포인트 <b id="cnt">0</b></span>
+  <span id="pos">–</span><span>줌 <b id="zoom">–</b></span>
 </div>
 
 <div class="dock" id="dock" style="display:none">
-  <div class="row" id="styles"></div>
   <div class="row">
-    <button class="tg" id="t-lights" aria-pressed="false">샘플 조명 2천개</button>
-    <button class="tg" id="t-heavy" aria-pressed="false">1만개 부하 테스트</button>
+    <button class="tg" id="t-light" aria-pressed="true"><span class="key rd" style="background:#FFE08A"></span>가로등</button>
+    <button class="tg" id="t-cctv" aria-pressed="true"><span class="key sq" style="background:#5BC8E8"></span>CCTV</button>
+    <button class="tg" id="t-police" aria-pressed="true"><span class="key rd" style="background:#7BE8A8"></span>경찰서</button>
+    <button class="tg" id="t-risk" aria-pressed="true"><span class="key sq" style="background:#E2564A"></span>위험지역</button>
+  </div>
+  <div class="row">
+    <button class="tg" id="t-mode" aria-pressed="false">골목 밝기로 보기</button>
     <button class="tg" id="t-tilt" aria-pressed="false">기울이기</button>
-    <button class="tg" id="t-copy" aria-pressed="false">style.json 복사</button>
+    <button class="tg" id="t-regen" aria-pressed="false">데이터 재생성</button>
   </div>
 </div>
 
@@ -96,169 +84,155 @@
 
 <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
 <script>
-const PALETTES = {
-  pastel: { name:'파스텔 주간',
-    bg:'#FDF6E3', water:'#A8D8EA', park:'#C8E6C0', land:'#F7EFDC',
-    bld:'#F0DEC4', bldLine:'#E3CBA6',
-    major:'#FFFDF7', majorLine:'#EBD9BC', minor:'#FFF6E8', minorLine:'#EEDFC6',
-    label:'#8A7550', labelHalo:'#FFFDF7' },
-  night: { name:'밤빛 야간',
-    bg:'#0D0F18', water:'#123A5C', park:'#1B4030', land:'#12151F',
-    bld:'#1A1E2E', bldLine:'#2A3048',
-    major:'#4A5490', majorLine:'#5A65A8', minor:'#343B63', minorLine:'#404874',
-    label:'#CFD4F0', labelHalo:'#080A12' },
-  plain: { name:'일반 지도',
-    bg:'#EFEFEA', water:'#B4D2E7', park:'#D3E5C6', land:'#E9E9E3',
-    bld:'#E0E0DA', bldLine:'#CDCDC6',
-    major:'#FFFFFF', majorLine:'#D8D8D2', minor:'#F7F7F4', minorLine:'#DEDED8',
-    label:'#6E6E68', labelHalo:'#FFFFFF' }
-};
+const NIGHT = { bg:'#0B0D15', water:'#123A5C', park:'#17362A', land:'#101320',
+  bld:'#181C2B', bldLine:'#262B40', major:'#4A5490', majorLine:'#5A65A8',
+  minor:'#333A60', minorLine:'#3E4670', label:'#CFD4F0', labelHalo:'#070911' };
 
 const MAJOR = ['motorway','trunk','primary','secondary','tertiary'];
 const MINOR = ['minor','service','track','path','pedestrian'];
 
-function makeStyle(key, p) {
-  const k = key || 'YOUR_MAPTILER_KEY';
+function baseStyle(key) {
+  const p = NIGHT;
   return {
     version: 8,
-    glyphs: `https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=${k}`,
-    sources: {
-      omt: { type:'vector', url:`https://api.maptiler.com/tiles/v3/tiles.json?key=${k}` }
-    },
+    glyphs: `https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=${key}`,
+    sources: { omt: { type:'vector', url:`https://api.maptiler.com/tiles/v3/tiles.json?key=${key}` } },
     layers: [
-      { id:'bg', type:'background', paint:{ 'background-color': p.bg } },
-
-      { id:'landcover', type:'fill', source:'omt', 'source-layer':'landcover',
-        paint:{ 'fill-color': p.land, 'fill-opacity': 0.6 } },
-
+      { id:'bg', type:'background', paint:{ 'background-color':p.bg } },
+      { id:'land', type:'fill', source:'omt', 'source-layer':'landcover',
+        paint:{ 'fill-color':p.land, 'fill-opacity':0.6 } },
       { id:'park', type:'fill', source:'omt', 'source-layer':'park',
-        paint:{ 'fill-color': p.park, 'fill-opacity': 0.75 } },
-
+        paint:{ 'fill-color':p.park, 'fill-opacity':0.7 } },
       { id:'water', type:'fill', source:'omt', 'source-layer':'water',
-        filter:['!=','brunnel','tunnel'],
-        paint:{ 'fill-color': p.water } },
-
-      { id:'building', type:'fill', source:'omt', 'source-layer':'building',
-        minzoom:14,
-        paint:{ 'fill-color': p.bld, 'fill-outline-color': p.bldLine,
+        paint:{ 'fill-color':p.water } },
+      { id:'building', type:'fill', source:'omt', 'source-layer':'building', minzoom:14,
+        paint:{ 'fill-color':p.bld, 'fill-outline-color':p.bldLine,
                 'fill-opacity':['interpolate',['linear'],['zoom'],14,0,15.5,1] } },
-
-      { id:'alley-case', type:'line', source:'omt', 'source-layer':'transportation',
-        minzoom:14, filter:['all',['==','$type','LineString'],['in','class'].concat(MINOR)],
+      { id:'alley', type:'line', source:'omt', 'source-layer':'transportation', minzoom:13,
+        filter:['all',['==','$type','LineString'],['in','class'].concat(MINOR)],
         layout:{ 'line-cap':'round','line-join':'round' },
-        paint:{ 'line-color': p.minorLine,
-                'line-width':['interpolate',['exponential',1.4],['zoom'],14,2.5,18,16] } },
-
-      { id:'alley', type:'line', source:'omt', 'source-layer':'transportation',
-        minzoom:14, filter:['all',['==','$type','LineString'],['in','class'].concat(MINOR)],
-        layout:{ 'line-cap':'round','line-join':'round' },
-        paint:{ 'line-color': p.minor,
-                'line-width':['interpolate',['exponential',1.4],['zoom'],14,1.2,18,13] } },
-
-      { id:'road-case', type:'line', source:'omt', 'source-layer':'transportation',
-        filter:['all',['==','$type','LineString'],['in','class'].concat(MAJOR)],
-        layout:{ 'line-cap':'round','line-join':'round' },
-        paint:{ 'line-color': p.majorLine,
-                'line-width':['interpolate',['exponential',1.4],['zoom'],10,2,18,30] } },
-
+        paint:{ 'line-color':p.minor,
+                'line-width':['interpolate',['exponential',1.4],['zoom'],13,1,18,13] } },
       { id:'road', type:'line', source:'omt', 'source-layer':'transportation',
         filter:['all',['==','$type','LineString'],['in','class'].concat(MAJOR)],
         layout:{ 'line-cap':'round','line-join':'round' },
-        paint:{ 'line-color': p.major,
-                'line-width':['interpolate',['exponential',1.4],['zoom'],10,1,18,25] } },
-
+        paint:{ 'line-color':p.major,
+                'line-width':['interpolate',['exponential',1.4],['zoom'],10,1,18,24] } },
       { id:'place', type:'symbol', source:'omt', 'source-layer':'place',
-        filter:['in','class','suburb','neighbourhood','quarter','village','town'],
+        filter:['in','class','suburb','neighbourhood','quarter'],
         layout:{ 'text-field':['coalesce',['get','name:ko'],['get','name']],
-                 'text-font':['Noto Sans Regular'],
-                 'text-size':['interpolate',['linear'],['zoom'],12,11,16,15],
-                 'text-max-width':7 },
-        paint:{ 'text-color': p.label, 'text-halo-color': p.labelHalo, 'text-halo-width':1.4 } }
+                 'text-font':['Noto Sans Regular'], 'text-size':12 },
+        paint:{ 'text-color':p.label, 'text-halo-color':p.labelHalo, 'text-halo-width':1.4 } }
     ]
   };
 }
 
 const $ = id => document.getElementById(id);
-let map, KEY = '', current = 'pastel', ptCount = 0, tilted = false;
+let map, KEY = '', tilted = false, brightMode = false;
+const EMPTY = { type:'FeatureCollection', features:[] };
 
-$('key').addEventListener('input', e => { $('go').disabled = e.target.value.trim().length < 8; });
-$('key').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('go').disabled) start(); });
-$('go').addEventListener('click', start);
-
-function toast(msg, ms) {
-  const t = $('toast');
-  t.textContent = msg; t.style.display = 'block';
-  clearTimeout(t._h); t._h = setTimeout(() => { t.style.display = 'none'; }, ms || 2600);
+function toast(m, ms) {
+  const t = $('toast'); t.textContent = m; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', ms || 2800);
 }
 
-function buildSwitcher() {
-  const wrap = $('styles');
-  Object.keys(PALETTES).forEach(id => {
-    const p = PALETTES[id];
-    const b = document.createElement('button');
-    b.className = 'sw';
-    b.setAttribute('aria-pressed', id === current);
-    b.innerHTML = `<span class="chips">
-        <span class="chip" style="background:${p.bg}"></span>
-        <span class="chip" style="background:${p.minor}"></span>
-        <span class="chip" style="background:${p.bld}"></span>
-        <span class="chip" style="background:${p.water}"></span>
-      </span><span>${p.name}</span>`;
-    b.onclick = () => switchStyle(id);
-    wrap.appendChild(b);
-  });
-}
-
-function switchStyle(id) {
-  if (id === current) return;
-  current = id;
-  [...$('styles').children].forEach((b, i) =>
-    b.setAttribute('aria-pressed', Object.keys(PALETTES)[i] === id));
-  map.setStyle(makeStyle(KEY, PALETTES[id]));
-}
-
-function randomPoints(n) {
-  const c = map.getCenter(), z = map.getZoom();
-  const span = Math.min(0.02 * Math.pow(2, 15 - z), 1.5);
-  const lngSpan = span / Math.max(0.2, Math.cos(c.lat * Math.PI / 180));
+function jitter(n, spreadM) {
+  const c = map.getCenter();
+  const dLat = spreadM / 111000;
+  const dLng = dLat / Math.cos(c.lat * Math.PI / 180);
   const f = [];
   for (let i = 0; i < n; i++) {
-    f.push({ type:'Feature', geometry:{ type:'Point', coordinates:[
-      c.lng + (Math.random() - 0.5) * 2 * lngSpan,
-      c.lat + (Math.random() - 0.5) * 2 * span
-    ]}, properties:{} });
+    f.push({ type:'Feature', properties:{},
+      geometry:{ type:'Point', coordinates:[
+        c.lng + (Math.random() - 0.5) * 2 * dLng,
+        c.lat + (Math.random() - 0.5) * 2 * dLat ]}});
   }
   return { type:'FeatureCollection', features:f };
 }
 
-const EMPTY = { type:'FeatureCollection', features:[] };
-
-function drawPoints() {
-  $('cnt').textContent = ptCount.toLocaleString();
-  const src = map.getSource('pts');
-  if (src) { src.setData(ptCount ? randomPoints(ptCount) : EMPTY); return; }
-  if (!ptCount) return;
-
-  map.addSource('pts', { type:'geojson', data: randomPoints(ptCount) });
-  map.addLayer({ id:'pts-glow', type:'circle', source:'pts',
-    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],10,4,14,10,18,26],
-            'circle-color':'#F5C518', 'circle-opacity':0.16, 'circle-blur':0.7 } });
-  map.addLayer({ id:'pts', type:'circle', source:'pts',
-    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],10,1.5,14,3,18,6],
-            'circle-color':'#FFE08A',
-            'circle-stroke-width':0.6, 'circle-stroke-color':'#7A5C00' } });
+function riskZones(n) {
+  const c = map.getCenter();
+  const dLat = 700 / 111000, dLng = dLat / Math.cos(c.lat * Math.PI / 180);
+  const f = [];
+  for (let i = 0; i < n; i++) {
+    const cx = c.lng + (Math.random() - 0.5) * 2 * dLng;
+    const cy = c.lat + (Math.random() - 0.5) * 2 * dLat;
+    const rx = dLng * (0.12 + Math.random() * 0.14);
+    const ry = dLat * (0.12 + Math.random() * 0.14);
+    const ring = [];
+    for (let a = 0; a < 8; a++) {
+      const t = a / 8 * Math.PI * 2, w = 0.75 + Math.random() * 0.5;
+      ring.push([cx + Math.cos(t) * rx * w, cy + Math.sin(t) * ry * w]);
+    }
+    ring.push(ring[0]);
+    f.push({ type:'Feature', properties:{ level: 1 + Math.floor(Math.random() * 3) },
+             geometry:{ type:'Polygon', coordinates:[ring] } });
+  }
+  return { type:'FeatureCollection', features:f };
 }
 
-function refreshPoints() {
-  if (!ptCount) return;
-  drawPoints();
+function addData() {
+  map.addSource('risk',   { type:'geojson', data: riskZones(5) });
+  map.addSource('lights', { type:'geojson', data: jitter(600, 600) });
+  map.addSource('cctv',   { type:'geojson', data: jitter(45, 600) });
+  map.addSource('police', { type:'geojson', data: jitter(2, 700) });
+
+  map.addLayer({ id:'risk-fill', type:'fill', source:'risk',
+    paint:{ 'fill-color':'#E2564A',
+            'fill-opacity':['interpolate',['linear'],['get','level'],1,0.08,3,0.2] } });
+  map.addLayer({ id:'risk-line', type:'line', source:'risk',
+    paint:{ 'line-color':'#F08A80', 'line-width':1.2, 'line-dasharray':[3,3], 'line-opacity':0.7 } });
+
+  map.addLayer({ id:'light-glow', type:'circle', source:'lights', minzoom:15,
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],15,5,19,16],
+            'circle-color':'#F5C518', 'circle-opacity':0.1, 'circle-blur':0.9 } });
+  map.addLayer({ id:'light-dot', type:'circle', source:'lights', minzoom:16,
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],16,1.4,19,3],
+            'circle-color':'#FFE08A', 'circle-opacity':0.95 } });
+
+  map.addLayer({ id:'cctv-dot', type:'circle', source:'cctv', minzoom:14,
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],14,3,19,7],
+            'circle-color':'#5BC8E8', 'circle-stroke-width':1.4,
+            'circle-stroke-color':'#0B2E3C' } });
+
+  map.addLayer({ id:'police-halo', type:'circle', source:'police',
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],11,8,19,22],
+            'circle-color':'#7BE8A8', 'circle-opacity':0.14 } });
+  map.addLayer({ id:'police-dot', type:'circle', source:'police',
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],11,5,19,10],
+            'circle-color':'#7BE8A8', 'circle-stroke-width':2,
+            'circle-stroke-color':'#07301C' } });
 }
 
-function setPoints(n, btn, others) {
-  ptCount = (ptCount === n) ? 0 : n;
-  btn.setAttribute('aria-pressed', ptCount === n);
-  others.forEach(o => o.setAttribute('aria-pressed', false));
-  drawPoints();
+function regen() {
+  if (!map.getSource('lights')) return;
+  map.getSource('risk').setData(riskZones(5));
+  map.getSource('lights').setData(jitter(600, 600));
+  map.getSource('cctv').setData(jitter(45, 600));
+  map.getSource('police').setData(jitter(2, 700));
+}
+
+function setVis(ids, on) {
+  ids.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'); });
+}
+
+function bindToggle(btnId, layerIds) {
+  const b = $(btnId);
+  b.onclick = () => {
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', on);
+    setVis(layerIds, on);
+  };
+}
+
+function applyBrightMode() {
+  const dark = NIGHT.minor;
+  map.setPaintProperty('alley', 'line-color', brightMode
+    ? ['interpolate',['linear'],['%',['*',['id'],37],10],
+        0,'#2A3050', 3,'#4A4A5E', 6,'#8A7A42', 9,'#D9BE66']
+    : dark);
+  setVis(['light-glow','light-dot'], !brightMode && $('t-light').getAttribute('aria-pressed') === 'true');
+  $('t-light').style.opacity = brightMode ? 0.4 : 1;
 }
 
 function start() {
@@ -266,61 +240,57 @@ function start() {
   $('gate').style.display = 'none';
   $('dock').style.display = 'block';
   $('hud').style.display = 'flex';
-  buildSwitcher();
 
   map = new maplibregl.Map({
-    container: 'map',
-    style: makeStyle(KEY, PALETTES.pastel),
-    center: [126.7052, 37.4563],
-    zoom: 16,
-    attributionControl: { compact: true }
+    container:'map', style: baseStyle(KEY),
+    center:[126.7052, 37.4563], zoom:16.5,
+    attributionControl:{ compact:true }
   });
-
   map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-right');
   map.addControl(new maplibregl.GeolocateControl({
-    positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true, showUserLocation:true
-  }), 'top-right');
+    positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true }), 'top-right');
 
   map.on('error', e => {
     const m = (e && e.error && e.error.message) || '';
-    if (/40[13]|Forbidden|Unauthorized/i.test(m))
-      toast('키가 거부됐습니다. 키 값과 도메인 제한 설정을 확인해 주세요.', 5000);
+    if (/40[13]|Forbidden|Unauthorized/i.test(m)) toast('키가 거부됐습니다. 키 값을 확인해 주세요.', 5000);
   });
 
-  map.on('style.load', () => { if (ptCount) drawPoints(); });
-  map.on('moveend', refreshPoints);
   map.on('move', () => {
     const c = map.getCenter();
     $('pos').textContent = c.lat.toFixed(5) + ', ' + c.lng.toFixed(5);
     $('zoom').textContent = map.getZoom().toFixed(1);
   });
-  map.once('load', () => {
+
+  map.on('load', () => {
+    addData();
+    bindToggle('t-light', ['light-glow','light-dot']);
+    bindToggle('t-cctv', ['cctv-dot']);
+    bindToggle('t-police', ['police-halo','police-dot']);
+    bindToggle('t-risk', ['risk-fill','risk-line']);
     $('zoom').textContent = map.getZoom().toFixed(1);
-    const c = map.getCenter();
-    $('pos').textContent = c.lat.toFixed(5) + ', ' + c.lng.toFixed(5);
   });
 
-  const bL = $('t-lights'), bH = $('t-heavy');
-  bL.onclick = () => setPoints(2000, bL, [bH]);
-  bH.onclick = () => setPoints(10000, bH, [bL]);
+  map.on('moveend', regen);
 
+  $('t-mode').onclick = e => {
+    brightMode = !brightMode;
+    e.currentTarget.setAttribute('aria-pressed', brightMode);
+    applyBrightMode();
+    toast(brightMode
+      ? '가로등 점 대신 골목 밝기로 표현합니다. 밝기는 임의값입니다.'
+      : '가로등을 개별 점으로 표시합니다.');
+  };
   $('t-tilt').onclick = e => {
     tilted = !tilted;
     e.currentTarget.setAttribute('aria-pressed', tilted);
     map.easeTo({ pitch: tilted ? 55 : 0, duration: 500 });
   };
-
-  $('t-copy').onclick = () => {
-    const json = JSON.stringify(makeStyle('', PALETTES[current]), null, 2);
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(json)
-        .then(() => toast('style.json을 복사했습니다. 키 자리는 YOUR_MAPTILER_KEY로 비워 뒀습니다.', 3200))
-        .catch(() => toast('복사가 차단됐습니다. 데스크톱 브라우저에서 시도해 주세요.'));
-    } else {
-      toast('이 브라우저에서는 복사를 지원하지 않습니다.');
-    }
-  };
+  $('t-regen').onclick = () => { regen(); toast('데이터를 다시 생성했습니다.', 1600); };
 }
+
+$('key').addEventListener('input', e => { $('go').disabled = e.target.value.trim().length < 8; });
+$('key').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('go').disabled) start(); });
+$('go').addEventListener('click', start);
 </script>
 </body>
 </html>
