@@ -218,21 +218,25 @@ function switchStyle(id) {
 }
 
 function randomPoints(n) {
-  const b = map.getBounds(), f = [];
+  const c = map.getCenter(), z = map.getZoom();
+  const span = Math.min(0.02 * Math.pow(2, 15 - z), 1.5);
+  const lngSpan = span / Math.max(0.2, Math.cos(c.lat * Math.PI / 180));
+  const f = [];
   for (let i = 0; i < n; i++) {
     f.push({ type:'Feature', geometry:{ type:'Point', coordinates:[
-      b.getWest() + Math.random() * (b.getEast() - b.getWest()),
-      b.getSouth() + Math.random() * (b.getNorth() - b.getSouth())
+      c.lng + (Math.random() - 0.5) * 2 * lngSpan,
+      c.lat + (Math.random() - 0.5) * 2 * span
     ]}, properties:{} });
   }
   return { type:'FeatureCollection', features:f };
 }
 
+const EMPTY = { type:'FeatureCollection', features:[] };
+
 function drawPoints() {
-  if (map.getLayer('pts-glow')) map.removeLayer('pts-glow');
-  if (map.getLayer('pts')) map.removeLayer('pts');
-  if (map.getSource('pts')) map.removeSource('pts');
   $('cnt').textContent = ptCount.toLocaleString();
+  const src = map.getSource('pts');
+  if (src) { src.setData(ptCount ? randomPoints(ptCount) : EMPTY); return; }
   if (!ptCount) return;
 
   map.addSource('pts', { type:'geojson', data: randomPoints(ptCount) });
@@ -246,8 +250,8 @@ function drawPoints() {
 }
 
 function refreshPoints() {
-  if (!ptCount || !map.getSource('pts')) return;
-  map.getSource('pts').setData(randomPoints(ptCount));
+  if (!ptCount) return;
+  drawPoints();
 }
 
 function setPoints(n, btn, others) {
@@ -283,7 +287,7 @@ function start() {
       toast('키가 거부됐습니다. 키 값과 도메인 제한 설정을 확인해 주세요.', 5000);
   });
 
-  map.on('styledata', drawPoints);
+  map.on('style.load', () => { if (ptCount) drawPoints(); });
   map.on('moveend', refreshPoints);
   map.on('move', () => {
     const c = map.getCenter();
