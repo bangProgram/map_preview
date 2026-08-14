@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>지도 스타일 미리보기</title>
+<link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+  :root{
+    --ink:#F2EFE6; --ink-dim:#9A968A; --line:#2B2E3C;
+    --panel:#15171F; --panel-2:#1D2029; --accent:#F5C518;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0E0F15;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    -webkit-text-size-adjust:100%}
+  #map{position:absolute;inset:0}
+
+  .gate{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:#0E0F15}
+  .gate-in{width:100%;max-width:380px}
+  .gate h1{font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+  .gate p{font-size:13px;line-height:1.6;color:var(--ink-dim);margin:0 0 20px}
+  label{display:block;font-size:12px;color:var(--ink-dim);margin:0 0 6px}
+  input[type=text]{width:100%;height:46px;padding:0 14px;font-size:16px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;outline:none}
+  input[type=text]:focus{border-color:var(--accent)}
+  .btn{width:100%;height:46px;margin-top:12px;font-size:15px;font-weight:600;color:#191919;
+    background:var(--accent);border:0;border-radius:10px;cursor:pointer}
+  .btn:disabled{opacity:.4;cursor:default}
+  .note{font-size:11px;line-height:1.6;color:#6E6B62;margin:14px 0 0}
+
+  .dock{position:absolute;left:0;right:0;bottom:0;z-index:10;
+    padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,rgba(14,15,21,.96),rgba(14,15,21,.72) 70%,transparent)}
+  .row{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding-bottom:2px}
+  .row::-webkit-scrollbar{display:none}
+  .row+.row{margin-top:8px}
+
+  .sw{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:42px;padding:0 13px 0 10px;
+    background:var(--panel);border:1px solid var(--line);border-radius:21px;
+    font-size:13px;color:var(--ink);cursor:pointer;white-space:nowrap}
+  .sw[aria-pressed=true]{border-color:var(--accent);background:var(--panel-2)}
+  .chips{display:flex;gap:3px}
+  .chip{width:11px;height:22px;border-radius:3px}
+
+  .tg{flex:0 0 auto;height:36px;padding:0 14px;background:var(--panel);border:1px solid var(--line);
+    border-radius:18px;font-size:12.5px;color:var(--ink-dim);cursor:pointer;white-space:nowrap}
+  .tg[aria-pressed=true]{color:#191919;background:var(--accent);border-color:var(--accent);font-weight:600}
+
+  .hud{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;
+    gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
+    font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-dim);
+    background:linear-gradient(to bottom,rgba(14,15,21,.85),transparent);pointer-events:none}
+  .hud b{color:var(--ink);font-weight:500}
+  .maplibregl-ctrl-group{background:var(--panel)!important;border:1px solid var(--line)!important}
+  .maplibregl-ctrl-group button+button{border-top-color:var(--line)!important}
+  .maplibregl-ctrl-group button span{filter:invert(1) brightness(1.6)}
+  .toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;
+    max-width:300px;padding:14px 18px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;font-size:13px;line-height:1.6;text-align:center;display:none}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-in">
+    <h1>지도 스타일 미리보기</h1>
+    <p>MapTiler 키를 넣으면 실제 지도에 파스텔·야간 스타일이 입혀집니다. 키는 이 화면에서만 쓰이고 어디에도 저장되지 않습니다.</p>
+    <label for="key">MapTiler API 키</label>
+    <input type="text" id="key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="키 붙여넣기">
+    <button class="btn" id="go" disabled>지도 열기</button>
+    <p class="note">공개 URL에 올려서 쓸 계획이면 MapTiler 콘솔에서 이 키에 도메인 제한을 걸어두세요.</p>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div class="hud" id="hud" style="display:none">
+  <span id="pos">–</span>
+  <span>줌 <b id="zoom">–</b> · 포인트 <b id="cnt">0</b></span>
+</div>
+
+<div class="dock" id="dock" style="display:none">
+  <div class="row" id="styles"></div>
+  <div class="row">
+    <button class="tg" id="t-lights" aria-pressed="false">샘플 조명 2천개</button>
+    <button class="tg" id="t-heavy" aria-pressed="false">1만개 부하 테스트</button>
+    <button class="tg" id="t-tilt" aria-pressed="false">기울이기</button>
+    <button class="tg" id="t-copy" aria-pressed="false">style.json 복사</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<script>
+const PALETTES = {
+  pastel: { name:'파스텔 주간',
+    bg:'#FDF6E3', water:'#A8D8EA', park:'#C8E6C0', land:'#F7EFDC',
+    bld:'#F0DEC4', bldLine:'#E3CBA6',
+    major:'#FFFDF7', majorLine:'#EBD9BC', minor:'#FFF6E8', minorLine:'#EEDFC6',
+    label:'#8A7550', labelHalo:'#FFFDF7' },
+  night: { name:'밤빛 야간',
+    bg:'#12141F', water:'#14304C', park:'#1B3A2C', land:'#171A28',
+    bld:'#1E2133', bldLine:'#2C3049',
+    major:'#343A63', majorLine:'#3F4677', minor:'#262A45', minorLine:'#2F3452',
+    label:'#B9BEE0', labelHalo:'#0E101A' },
+  plain: { name:'일반 지도',
+    bg:'#EFEFEA', water:'#B4D2E7', park:'#D3E5C6', land:'#E9E9E3',
+    bld:'#E0E0DA', bldLine:'#CDCDC6',
+    major:'#FFFFFF', majorLine:'#D8D8D2', minor:'#F7F7F4', minorLine:'#DEDED8',
+    label:'#6E6E68', labelHalo:'#FFFFFF' }
+};
+
+const MAJOR = ['motorway','trunk','primary','secondary','tertiary'];
+const MINOR = ['minor','service','track','path','pedestrian'];
+
+function makeStyle(key, p) {
+  const k = key || 'YOUR_MAPTILER_KEY';
+  return {
+    version: 8,
+    glyphs: `https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=${k}`,
+    sources: {
+      omt: { type:'vector', url:`https://api.maptiler.com/tiles/v3/tiles.json?key=${k}` }
+    },
+    layers: [
+      { id:'bg', type:'background', paint:{ 'background-color': p.bg } },
+
+      { id:'landcover', type:'fill', source:'omt', 'source-layer':'landcover',
+        paint:{ 'fill-color': p.land, 'fill-opacity': 0.6 } },
+
+      { id:'park', type:'fill', source:'omt', 'source-layer':'park',
+        paint:{ 'fill-color': p.park, 'fill-opacity': 0.75 } },
+
+      { id:'water', type:'fill', source:'omt', 'source-layer':'water',
+        filter:['!=','brunnel','tunnel'],
+        paint:{ 'fill-color': p.water } },
+
+      { id:'building', type:'fill', source:'omt', 'source-layer':'building',
+        minzoom:14,
+        paint:{ 'fill-color': p.bld, 'fill-outline-color': p.bldLine,
+                'fill-opacity':['interpolate',['linear'],['zoom'],14,0,15.5,1] } },
+
+      { id:'alley-case', type:'line', source:'omt', 'source-layer':'transportation',
+        minzoom:14, filter:['all',['==','$type','LineString'],['in','class'].concat(MINOR)],
+        layout:{ 'line-cap':'round','line-join':'round' },
+        paint:{ 'line-color': p.minorLine,
+                'line-width':['interpolate',['exponential',1.4],['zoom'],14,2.5,18,16] } },
+
+      { id:'alley', type:'line', source:'omt', 'source-layer':'transportation',
+        minzoom:14, filter:['all',['==','$type','LineString'],['in','class'].concat(MINOR)],
+        layout:{ 'line-cap':'round','line-join':'round' },
+        paint:{ 'line-color': p.minor,
+                'line-width':['interpolate',['exponential',1.4],['zoom'],14,1.2,18,13] } },
+
+      { id:'road-case', type:'line', source:'omt', 'source-layer':'transportation',
+        filter:['all',['==','$type','LineString'],['in','class'].concat(MAJOR)],
+        layout:{ 'line-cap':'round','line-join':'round' },
+        paint:{ 'line-color': p.majorLine,
+                'line-width':['interpolate',['exponential',1.4],['zoom'],10,2,18,30] } },
+
+      { id:'road', type:'line', source:'omt', 'source-layer':'transportation',
+        filter:['all',['==','$type','LineString'],['in','class'].concat(MAJOR)],
+        layout:{ 'line-cap':'round','line-join':'round' },
+        paint:{ 'line-color': p.major,
+                'line-width':['interpolate',['exponential',1.4],['zoom'],10,1,18,25] } },
+
+      { id:'place', type:'symbol', source:'omt', 'source-layer':'place',
+        filter:['in','class','suburb','neighbourhood','quarter','village','town'],
+        layout:{ 'text-field':['coalesce',['get','name:ko'],['get','name']],
+                 'text-font':['Noto Sans Regular'],
+                 'text-size':['interpolate',['linear'],['zoom'],12,11,16,15],
+                 'text-max-width':7 },
+        paint:{ 'text-color': p.label, 'text-halo-color': p.labelHalo, 'text-halo-width':1.4 } }
+    ]
+  };
+}
+
+const $ = id => document.getElementById(id);
+let map, KEY = '', current = 'pastel', ptCount = 0, tilted = false;
+
+$('key').addEventListener('input', e => { $('go').disabled = e.target.value.trim().length < 8; });
+$('key').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('go').disabled) start(); });
+$('go').addEventListener('click', start);
+
+function toast(msg, ms) {
+  const t = $('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => { t.style.display = 'none'; }, ms || 2600);
+}
+
+function buildSwitcher() {
+  const wrap = $('styles');
+  Object.keys(PALETTES).forEach(id => {
+    const p = PALETTES[id];
+    const b = document.createElement('button');
+    b.className = 'sw';
+    b.setAttribute('aria-pressed', id === current);
+    b.innerHTML = `<span class="chips">
+        <span class="chip" style="background:${p.bg}"></span>
+        <span class="chip" style="background:${p.minor}"></span>
+        <span class="chip" style="background:${p.bld}"></span>
+        <span class="chip" style="background:${p.water}"></span>
+      </span><span>${p.name}</span>`;
+    b.onclick = () => switchStyle(id);
+    wrap.appendChild(b);
+  });
+}
+
+function switchStyle(id) {
+  if (id === current) return;
+  current = id;
+  [...$('styles').children].forEach((b, i) =>
+    b.setAttribute('aria-pressed', Object.keys(PALETTES)[i] === id));
+  map.setStyle(makeStyle(KEY, PALETTES[id]));
+}
+
+function randomPoints(n) {
+  const b = map.getBounds(), f = [];
+  for (let i = 0; i < n; i++) {
+    f.push({ type:'Feature', geometry:{ type:'Point', coordinates:[
+      b.getWest() + Math.random() * (b.getEast() - b.getWest()),
+      b.getSouth() + Math.random() * (b.getNorth() - b.getSouth())
+    ]}, properties:{} });
+  }
+  return { type:'FeatureCollection', features:f };
+}
+
+function drawPoints() {
+  if (map.getLayer('pts-glow')) map.removeLayer('pts-glow');
+  if (map.getLayer('pts')) map.removeLayer('pts');
+  if (map.getSource('pts')) map.removeSource('pts');
+  $('cnt').textContent = ptCount.toLocaleString();
+  if (!ptCount) return;
+
+  map.addSource('pts', { type:'geojson', data: randomPoints(ptCount) });
+  map.addLayer({ id:'pts-glow', type:'circle', source:'pts',
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],14,6,18,22],
+            'circle-color':'#F5C518', 'circle-opacity':0.14, 'circle-blur':0.7 } });
+  map.addLayer({ id:'pts', type:'circle', source:'pts',
+    paint:{ 'circle-radius':['interpolate',['linear'],['zoom'],14,1.6,18,5],
+            'circle-color':'#FFD966',
+            'circle-stroke-width':0.5, 'circle-stroke-color':'#8A6B00' } });
+}
+
+function setPoints(n, btn, others) {
+  ptCount = (ptCount === n) ? 0 : n;
+  btn.setAttribute('aria-pressed', ptCount === n);
+  others.forEach(o => o.setAttribute('aria-pressed', false));
+  drawPoints();
+}
+
+function start() {
+  KEY = $('key').value.trim();
+  $('gate').style.display = 'none';
+  $('dock').style.display = 'block';
+  $('hud').style.display = 'flex';
+  buildSwitcher();
+
+  map = new maplibregl.Map({
+    container: 'map',
+    style: makeStyle(KEY, PALETTES.pastel),
+    center: [126.7052, 37.4563],
+    zoom: 16,
+    attributionControl: { compact: true }
+  });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-right');
+  map.addControl(new maplibregl.GeolocateControl({
+    positionOptions:{ enableHighAccuracy:true }, trackUserLocation:true, showUserLocation:true
+  }), 'top-right');
+
+  map.on('error', e => {
+    const m = (e && e.error && e.error.message) || '';
+    if (/40[13]|Forbidden|Unauthorized/i.test(m))
+      toast('키가 거부됐습니다. 키 값과 도메인 제한 설정을 확인해 주세요.', 5000);
+  });
+
+  map.on('styledata', drawPoints);
+  map.on('move', () => {
+    const c = map.getCenter();
+    $('pos').textContent = c.lat.toFixed(5) + ', ' + c.lng.toFixed(5);
+    $('zoom').textContent = map.getZoom().toFixed(1);
+  });
+  map.once('load', () => {
+    $('zoom').textContent = map.getZoom().toFixed(1);
+    const c = map.getCenter();
+    $('pos').textContent = c.lat.toFixed(5) + ', ' + c.lng.toFixed(5);
+  });
+
+  const bL = $('t-lights'), bH = $('t-heavy');
+  bL.onclick = () => setPoints(2000, bL, [bH]);
+  bH.onclick = () => setPoints(10000, bH, [bL]);
+
+  $('t-tilt').onclick = e => {
+    tilted = !tilted;
+    e.currentTarget.setAttribute('aria-pressed', tilted);
+    map.easeTo({ pitch: tilted ? 55 : 0, duration: 500 });
+  };
+
+  $('t-copy').onclick = () => {
+    const json = JSON.stringify(makeStyle('', PALETTES[current]), null, 2);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(json)
+        .then(() => toast('style.json을 복사했습니다. 키 자리는 YOUR_MAPTILER_KEY로 비워 뒀습니다.', 3200))
+        .catch(() => toast('복사가 차단됐습니다. 데스크톱 브라우저에서 시도해 주세요.'));
+    } else {
+      toast('이 브라우저에서는 복사를 지원하지 않습니다.');
+    }
+  };
+}
+</script>
+</body>
+</html>
